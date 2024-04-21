@@ -31,18 +31,21 @@ namespace Since1999.Controllers
         [Route("api/auth/login")]
         public IHttpActionResult Login([FromBody] LoginModel login)
         {
-            if (_userService.IsValidUser(login.Email, login.Password))
+            var user = _userService.GetUserByEmail(login.Email);
+            if (user != null && _userService.IsValidUser(login.Email, login.Password))
             {
-                var tokenString = GenerateJwtToken(login.Email);
-                return Ok(new { token = tokenString });
+                var tokenString = GenerateJwtToken(login.Email, user); // Passa l'oggetto User al metodo GenerateJwtToken
+                return Ok(new { token = tokenString, userId = user.UserID });
             }
 
             return Unauthorized();
         }
 
-        private string GenerateJwtToken(string email)
+
+
+        private string GenerateJwtToken(string email, User user)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("1234567890qwertyuiopasdfghjklzxcvbnm"));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var expires = DateTime.UtcNow.AddMinutes(_expirationMinutes);
@@ -53,7 +56,12 @@ namespace Since1999.Controllers
                 new[]
                 {
             new Claim(JwtRegisteredClaimNames.Sub, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            // Aggiungi altre informazioni sull'utente come claim aggiuntive
+            new Claim("UserID", user.UserID.ToString()),
+            new Claim("Nome", user.Nome),
+            new Claim("Cognome", user.Cognome),
+                    // Aggiungi altri claim personalizzati secondo necessità
                 },
                 expires: expires,
                 signingCredentials: credentials
@@ -61,11 +69,9 @@ namespace Since1999.Controllers
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            // Aggiungi un log per verificare il token generato
-            Console.WriteLine("Token generato: " + tokenString);
-
             return tokenString;
         }
+
 
     }
 }

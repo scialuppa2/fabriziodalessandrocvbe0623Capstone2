@@ -1,6 +1,8 @@
 ﻿using BCryptNet = BCrypt.Net.BCrypt;
 using System.Data.SqlClient;
 using System.Configuration;
+using Since1999.Models;
+using System;
 
 namespace Since1999.Services
 {
@@ -13,12 +15,24 @@ namespace Since1999.Services
             _connString = ConfigurationManager.ConnectionStrings["Since1999Context"].ToString();
         }
 
+
         public bool IsValidUser(string email, string password)
+        {
+            var user = GetUserByEmail(email);
+            if (user != null)
+            {
+                // Verifica la corrispondenza della password
+                return BCryptNet.Verify(password, user.PasswordHash);
+            }
+            return false;
+        }
+
+        public User GetUserByEmail(string email)
         {
             using (var conn = new SqlConnection(_connString))
             {
                 conn.Open();
-                var query = "SELECT PasswordHash FROM Users WHERE Email = @Email";
+                var query = "SELECT * FROM Users WHERE Email = @Email";
                 using (var command = new SqlCommand(query, conn))
                 {
                     command.Parameters.AddWithValue("@Email", email);
@@ -26,26 +40,26 @@ namespace Since1999.Services
                     {
                         if (reader.Read())
                         {
-                            var storedHash = reader.GetString(0);
-                            if (string.IsNullOrEmpty(storedHash))
+                            var user = new User
                             {
-                                // Gestire il caso in cui l'hash della password recuperato è nullo o vuoto
-                                return false;
-                            }
-                            return VerifyPasswordHash(password, storedHash);
+                                UserID = (int)reader["UserID"],
+                                Nome = (string)reader["Nome"],
+                                Cognome = (string)reader["Cognome"],
+                                Username = (string)reader["Username"],
+                                Email = (string)reader["Email"],
+                                PasswordHash = (string)reader["PasswordHash"]
+                            };
+                            // Aggiungi log dei dati dell'utente
+                            Console.WriteLine("Dati dell'utente recuperati:", user);
+                            return user;
                         }
                     }
                 }
             }
 
             // Nessun utente trovato con quell'email
-            return false;
+            return null;
         }
 
-
-        private bool VerifyPasswordHash(string password, string storedHash)
-        {
-            return BCryptNet.Verify(password, storedHash);
-        }
     }
 }

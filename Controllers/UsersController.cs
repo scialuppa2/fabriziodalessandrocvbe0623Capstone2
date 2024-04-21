@@ -11,7 +11,6 @@ using Since1999.Models;
 
 namespace Since1999.Controllers
 {
- 
     public class UsersController : ApiController
     {
         // Connessione al database
@@ -23,7 +22,7 @@ namespace Since1999.Controllers
             using (var conn = new SqlConnection(connString))
             {
                 conn.Open();
-                var command = new SqlCommand(@"SELECT * FROM Users", conn);
+                var command = new SqlCommand(@"SELECT UserID, Nome, Cognome, Username, Email FROM Users", conn);
                 var reader = command.ExecuteReader();
 
                 var users = new List<User>();
@@ -35,8 +34,7 @@ namespace Since1999.Controllers
                         Nome = (string)reader["Nome"],
                         Cognome = (string)reader["Cognome"],
                         Username = (string)reader["Username"],
-                        Email = (string)reader["Email"],
-                        PasswordHash = (string)reader["PasswordHash"]
+                        Email = (string)reader["Email"]
                     };
                     users.Add(user);
                 }
@@ -51,7 +49,7 @@ namespace Since1999.Controllers
             using (var conn = new SqlConnection(connString))
             {
                 conn.Open();
-                var command = new SqlCommand(@"SELECT * FROM Users WHERE UserID = @UserID", conn);
+                var command = new SqlCommand(@"SELECT UserID, Nome, Cognome, Username, Email FROM Users WHERE UserID = @UserID", conn);
                 command.Parameters.AddWithValue("@UserID", id);
                 var reader = command.ExecuteReader();
 
@@ -63,8 +61,7 @@ namespace Since1999.Controllers
                         Nome = (string)reader["Nome"],
                         Cognome = (string)reader["Cognome"],
                         Username = (string)reader["Username"],
-                        Email = (string)reader["Email"],
-                        PasswordHash = (string)reader["PasswordHash"]
+                        Email = (string)reader["Email"]
                     };
                     return Ok(user);
                 }
@@ -81,14 +78,13 @@ namespace Since1999.Controllers
             using (var conn = new SqlConnection(connString))
             {
                 conn.Open();
-                var command = new SqlCommand(@"INSERT INTO Users (Nome, Cognome, Username, Email, PasswordHash) 
-                                               VALUES (@Nome, @Cognome, @Username, @Email, @PasswordHash);
+                var command = new SqlCommand(@"INSERT INTO Users (Nome, Cognome, Username, Email) 
+                                               VALUES (@Nome, @Cognome, @Username, @Email);
                                                SELECT CAST(SCOPE_IDENTITY() AS INT);", conn);
                 command.Parameters.AddWithValue("@Nome", user.Nome);
                 command.Parameters.AddWithValue("@Cognome", user.Cognome);
                 command.Parameters.AddWithValue("@Username", user.Username);
                 command.Parameters.AddWithValue("@Email", user.Email);
-                command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
                 var userId = (int)command.ExecuteScalar();
 
                 user.UserID = userId;
@@ -104,13 +100,12 @@ namespace Since1999.Controllers
                 conn.Open();
                 var command = new SqlCommand(@"UPDATE Users 
                                                SET Nome = @Nome, Cognome = @Cognome, Username = @Username, 
-                                                   Email = @Email, PasswordHash = @PasswordHash 
+                                                   Email = @Email 
                                                WHERE UserID = @UserID", conn);
                 command.Parameters.AddWithValue("@Nome", user.Nome);
                 command.Parameters.AddWithValue("@Cognome", user.Cognome);
                 command.Parameters.AddWithValue("@Username", user.Username);
                 command.Parameters.AddWithValue("@Email", user.Email);
-                command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
                 command.Parameters.AddWithValue("@UserID", id);
 
                 int rowsAffected = command.ExecuteNonQuery();
