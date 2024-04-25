@@ -23,5 +23,8 @@ namespace Since1999.Models
         [MinLength(5, ErrorMessage = "La password deve essere lunga almeno 5 caratteri.")]
         public string PasswordHash { get; set; }
 
+        [DataType(DataType.ImageUrl)]
+        public string ProfileImage { get; set; } // Rendere nullable con '?'
+
     }
 }

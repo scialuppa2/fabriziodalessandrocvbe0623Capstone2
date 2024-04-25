@@ -15,7 +15,6 @@ namespace Since1999.Services
             _connString = ConfigurationManager.ConnectionStrings["Since1999Context"].ToString();
         }
 
-
         public bool IsValidUser(string email, string password)
         {
             var user = GetUserByEmail(email);
@@ -47,7 +46,8 @@ namespace Since1999.Services
                                 Cognome = (string)reader["Cognome"],
                                 Username = (string)reader["Username"],
                                 Email = (string)reader["Email"],
-                                PasswordHash = (string)reader["PasswordHash"]
+                                PasswordHash = (string)reader["PasswordHash"],
+                                ProfileImage = reader["ProfileImage"] as string // Aggiungi il campo per l'immagine del profilo
                             };
                             // Aggiungi log dei dati dell'utente
                             Console.WriteLine("Dati dell'utente recuperati:", user);
@@ -60,6 +60,5 @@ namespace Since1999.Services
             // Nessun utente trovato con quell'email
             return null;
         }
-
     }
 }
